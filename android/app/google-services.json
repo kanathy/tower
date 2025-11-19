@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "523987709660",
+    "project_id": "towersafety-56937",
+    "storage_bucket": "towersafety-56937.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:523987709660:android:c0fb712054b6c78e410e19",
+        "android_client_info": {
+          "package_name": "com.example.tower"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNI-1dDQ56XYH85f69nzG3M2zN69d8mSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
