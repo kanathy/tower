@@ -86,20 +86,29 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: const BackButton(color: Colors.black),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'FeedBack',
-          style: TextStyle(
-            color: Color(0xFF4B1C7D),
-            fontWeight: FontWeight.bold,
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
         ),
-        centerTitle: true,
       ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          leading: const BackButton(color: Colors.black),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'FeedBack',
+            style: TextStyle(
+              color: Color(0xFF4B1C7D),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+        ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: SingleChildScrollView(
@@ -208,6 +217,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

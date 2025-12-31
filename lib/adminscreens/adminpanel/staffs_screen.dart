@@ -1,303 +1,195 @@
-import 'package:tower/adminscreens/adminpanel/employee/employee_details_screen.dart';
-import 'package:tower/adminscreens/adminpanel/report_analytics_screen.dart';
-import 'package:tower/adminscreens/adminpanel/safety_measures_screen.dart';
-import 'package:tower/adminscreens/adminpanel/attendance_screen.dart';
-import 'package:tower/adminscreens/adminpanel/calendar_screen.dart';
-import 'package:tower/adminscreens/adminpanel/feedback_screen.dart';
-import 'package:tower/adminscreens/adminpanel/notification.dart';
-import 'package:tower/adminscreens/adminpanel/staffs_screen.dart';
-
 import 'package:flutter/material.dart';
-
-import 'package:flutter/material.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:tower/adminscreens/widgets/employee_card.dart';
+import 'employee_detail_screen.dart';
+import 'add_staff_screen.dart';
+import 'dart:ui';
 
-class employee {
-  String emp_id;
-  String name;
-  // String photoUrl;
-  String dob;
-  String email;
-  String address;
-  String join_date;
-
-  employee({
-    required this.emp_id,
-    required this.name,
-    // required this.photoUrl,
-    required this.dob,
-    required this.email,
-    required this.address,
-    required this.join_date,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      //  'photoUrl': photoUrl,
-      'dob': dob,
-      'email': email,
-      'address': address,
-      'join_date': join_date,
-    };
-  }
-
-  factory employee.fromMap(String id, Map<String, dynamic> map) {
-    return employee(
-      emp_id: id,
-      name: map['name'] ?? '',
-      //  photoUrl: map['photoUrl'] ?? '',
-      dob: map['dob'] ?? '',
-      email: map['email'] ?? '',
-      address: map['address'] ?? '',
-      join_date: map['join_date'] ?? '',
-    );
-  }
-}
-
-class StaffPage extends StatefulWidget {
-  const StaffPage({super.key});
+class StaffsScreen extends StatefulWidget {
+  const StaffsScreen({super.key});
 
   @override
-  State<StaffPage> createState() => _StaffPageState();
+  State<StaffsScreen> createState() => _StaffsScreenState();
 }
 
-class _StaffPageState extends State<StaffPage> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class _StaffsScreenState extends State<StaffsScreen> {
   final TextEditingController _searchController = TextEditingController();
-
-  List<employee> _allemployees = [];
-  List<employee> _filteredemployees = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loademployees();
-    _searchController.addListener(_filteremployees);
-  }
-
-  Future<void> _loademployees() async {
-    final snapshot = await _firestore.collection('employees').get();
-    final employees =
-        snapshot.docs
-            .map((doc) => employee.fromMap(doc.id, doc.data()))
-            .toList();
-
-    setState(() {
-      _allemployees = employees;
-      _filteredemployees = employees;
-    });
-  }
-
-  void _filteremployees() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredemployees =
-          _allemployees
-              .where((e) => e.name.toLowerCase().contains(query))
-              .toList();
-    });
-  }
-
-  Future<void> _addemployee(employee employee) async {
-    final docRef = await _firestore
-        .collection('employees')
-        .add(employee.toMap());
-    setState(() {
-      _allemployees.add(employee);
-      _filteredemployees = _allemployees;
-    });
-  }
-
-  Future<void> _deleteemployee(employee employee) async {
-    await _firestore.collection('employees').doc(employee.emp_id).delete();
-    _loademployees();
-  }
-
-  void _showAddemployeeDialog() {
-    final nameController = TextEditingController();
-    final photoController = TextEditingController();
-    final dobController = TextEditingController();
-    final emailController = TextEditingController();
-    final addressController = TextEditingController();
-    final joinController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Add New employee'),
-            content: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildTextField('Name', nameController),
-                  _buildTextField('Photo URL', photoController),
-                  _buildTextField('DOB (YYYY-MM-DD)', dobController),
-                  _buildTextField('Email', emailController),
-                  _buildTextField('Address', addressController),
-                  _buildTextField('Join Date (YYYY-MM-DD)', joinController),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final newemployee = employee(
-                    emp_id: '',
-                    name: nameController.text.trim(),
-                    //photoUrl: photoController.text.trim(),
-                    dob: dobController.text.trim(),
-                    email: emailController.text.trim(),
-                    address: addressController.text.trim(),
-                    join_date: joinController.text.trim(),
-                  );
-                  await _addemployee(newemployee);
-                  Navigator.pop(ctx);
-                  _loademployees();
-                },
-                child: const Text('Add'),
-              ),
-            ],
-          ),
-    );
-  }
-
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      ),
-    );
-  }
-
-  void _showemployeeDetails(employee employee) {
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: Text(employee.name),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  // backgroundImage: NetworkImage(employee.photoUrl),
-                ),
-                const SizedBox(height: 10),
-                _buildDetailRow('DOB', employee.dob),
-                _buildDetailRow('Email', employee.email),
-                _buildDetailRow('Address', employee.address),
-                _buildDetailRow('Join Date', employee.join_date),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  _deleteemployee(employee);
-                  Navigator.pop(ctx);
-                },
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  String _searchQuery = "";
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: const BackButton(color: Color(0xFF4C0B58)),
-        title: const Text(
-          'Staff Details',
-          style: TextStyle(
-            color: Color(0xFF4C0B58),
-            fontWeight: FontWeight.bold,
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search staff by name...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          title: const Text(
+            'Employee Directory',
+            style: TextStyle(
+              color: Color.fromARGB(255, 73, 27, 109),
+              fontWeight: FontWeight.w900,
+              fontSize: 22,
+              letterSpacing: 1,
+            ),
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.white.withOpacity(0.2),
+          elevation: 0,
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          iconTheme: const IconThemeData(
+            color: Color.fromARGB(255, 73, 27, 109),
+          ),
+        ),
+        body: Column(
+          children: [
+            const SizedBox(height: kToolbarHeight + 20),
+
+            /// 🔍 Premium Glass Search Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value.toLowerCase();
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search by name or role...',
+                        hintStyle: TextStyle(color: Colors.grey.shade600),
+                        prefixIcon: const Icon(Icons.search_rounded, color: Color.fromARGB(255, 73, 27, 109)),
+                        suffixIcon: _searchQuery.isNotEmpty 
+                          ? IconButton(
+                              icon: const Icon(Icons.clear_rounded),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = "";
+                                });
+                              },
+                            )
+                          : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
+
+            /// 👨‍💼 Employee List
+            Expanded(
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: FirebaseFirestore.instance
+                    .collection('employees')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color.fromARGB(255, 73, 27, 109),
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('Something went wrong'));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('No employees found'));
+                  }
+
+                  final filteredDocs = snapshot.data!.docs.where((doc) {
+                    final data = doc.data();
+                    final name = (data['name'] ?? '').toString().toLowerCase();
+                    final role = (data['designation'] ?? '').toString().toLowerCase();
+                    return name.contains(_searchQuery) || role.contains(_searchQuery);
+                  }).toList();
+
+                  if (filteredDocs.isEmpty) {
+                    return const Center(child: Text('No matching employees found'));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    itemCount: filteredDocs.length,
+                    itemBuilder: (context, index) {
+                      final doc = filteredDocs[index];
+                      final data = doc.data();
+                      final id = doc.id;
+
+                      final String name = (data['name'] != null &&
+                              data['name'].toString().trim().isNotEmpty)
+                          ? data['name']
+                          : 'Unnamed Employee';
+
+                      return EmployeeCard(
+                        name: name,
+                        avatarUrl: data['avatarUrl'] ?? '', 
+                        isPending: data['status'] == 'pending',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EmployeeDetailScreen(employeeId: id),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddStaffScreen()),
+            );
+          },
+          backgroundColor: const Color.fromARGB(255, 73, 27, 109),
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          Expanded(
-            child:
-                _filteredemployees.isEmpty
-                    ? const Center(child: Text('No staff found'))
-                    : ListView.separated(
-                      itemCount: _filteredemployees.length,
-                      separatorBuilder: (_, __) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final employee = _filteredemployees[index];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            // backgroundImage: NetworkImage(employee.photoUrl),
-                            radius: 25,
-                          ),
-                          title: Text(employee.name),
-                          subtitle: Text('Email: ${employee.email}'),
-                          onTap: () => _showemployeeDetails(employee),
-                        );
-                      },
-                    ),
+          child: const Icon(
+            Icons.add_rounded,
+            color: Colors.white,
+            size: 32,
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF4C0B58),
-        child: const Icon(Icons.add),
-        onPressed: _showAddemployeeDialog,
-        tooltip: 'Add New Staff',
+        ),
       ),
     );
   }

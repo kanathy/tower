@@ -65,12 +65,20 @@ class _AdminCreateAccountScreenState extends State<AdminCreateAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF4C0B58)),
           onPressed: () => Navigator.pop(context),
         ),
@@ -92,10 +100,25 @@ class _AdminCreateAccountScreenState extends State<AdminCreateAccountScreen> {
             key: _formKey,
             child: Column(
               children: [
-                Image.asset(
-                  'lib/assets/images/admin.png',
-                  height: 240,
-                  fit: BoxFit.contain,
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4C0B58).withOpacity(0.15),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'lib/assets/images/admin.png',
+                      height: 240,
+                      width: 240,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 30),
 
@@ -249,6 +272,7 @@ class _AdminCreateAccountScreenState extends State<AdminCreateAccountScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -7,6 +7,8 @@ import 'package:tower/screens/chatbot.dart';
 import 'package:tower/screens/profileset/profile.dart';
 import 'package:tower/screens/upload.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class SafetyChecklistScreen extends StatefulWidget {
   const SafetyChecklistScreen({super.key});
@@ -31,266 +33,298 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Color.fromARGB(255, 76, 11, 88),
-          ),
-          onPressed:
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HomePage()),
-              ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
         ),
-        title: const Text(
-          'Safety Checklist',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color.fromARGB(255, 76, 11, 88),
-          ),
-        ),
-        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            const Text(
-              'Full Name',
-              style: TextStyle(color: Color.fromARGB(255, 76, 11, 88)),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Color.fromARGB(255, 76, 11, 88),
             ),
-            const SizedBox(height: 4),
-            _textField('Enter Your Name'),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+                ),
+          ),
+          title: const Text(
+            'Safety Checklist',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 76, 11, 88),
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ListView(
+            children: [
+              const Text(
+                'Full Name',
+                style: TextStyle(color: Color.fromARGB(255, 76, 11, 88)),
+              ),
+              const SizedBox(height: 4),
+              _textField('Enter Your Name'),
 
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Site',
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 76, 11, 88),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      DropdownButtonFormField<String>(
-                        value: _selectedSite,
-                        items:
-                            _sites
-                                .map(
-                                  (site) => DropdownMenuItem(
-                                    value: site,
-                                    child: Text(site),
-                                  ),
-                                )
-                                .toList(),
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.location_on_outlined),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 12,
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Site',
+                          style: TextStyle(
+                            color: Color.fromARGB(255, 76, 11, 88),
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          hintText: 'Select Site',
                         ),
-                        onChanged: (val) => setState(() => _selectedSite = val),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        DropdownButtonFormField<String>(
+                          value: _selectedSite,
+                          items:
+                              _sites
+                                  .map(
+                                    (site) => DropdownMenuItem(
+                                      value: site,
+                                      child: Text(site),
+                                    ),
+                                  )
+                                  .toList(),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.location_on_outlined),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            hintText: 'Select Site',
+                          ),
+                          onChanged:
+                              (val) => setState(() => _selectedSite = val),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Date',
+                          style: TextStyle(
+                            color: Color.fromARGB(255, 76, 11, 88),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        TextField(
+                          controller: _dateController,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            hintText: 'Pick a Date',
+                            prefixIcon: const Icon(Icons.calendar_today),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2100),
+                            );
+                            if (picked != null) {
+                              _dateController.text = DateFormat(
+                                'dd/MM/yyyy',
+                              ).format(picked);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              _buildChecklistSection(
+                title: 'Device Check',
+                color: const Color(0xFFFFF5C2),
+                titleColor: Color.fromARGB(255, 76, 11, 88),
+                items: [
+                  'Heart Rate within Safe range 78 bpm',
+                  'Oxygen level acceptable 98%',
+                ],
+              ),
+              _buildChecklistSection(
+                title: 'PPE',
+                color: const Color(0xFFE2F3F8),
+                titleColor: Color.fromARGB(
+                  255,
+                  76,
+                  11,
+                  88,
+                ), // Custom title color for PPE
+                items: [
+                  'Helmet worn properly',
+                  'Non-slip gloves worn',
+                  'Safety shoes worn',
+                ],
+              ),
+              _buildChecklistSection(
+                title: 'Environment Check',
+                color: const Color(0xFFFFE3EC),
+                titleColor: Color.fromARGB(255, 76, 11, 88),
+                items: [
+                  'Communication Device is working',
+                  'Emergency exits clear',
+                  'No loose tools on platform',
+                ],
+              ),
+              _buildChecklistSection(
+                title: 'Environment Awareness',
+                color: const Color(0xFFEEE5FF),
+                titleColor: Color.fromARGB(255, 76, 11, 88),
+                items: [
+                  'Weather is safe for climbing',
+                  'No lightning / storm warnings',
+                  'Wind speed within limits',
+                ],
+              ),
+
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 76, 11, 88),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 50,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Date',
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 76, 11, 88),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      TextField(
-                        controller: _dateController,
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          hintText: 'Pick a Date',
-                          prefixIcon: const Icon(Icons.calendar_today),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 12,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null) {
-                            _dateController.text = DateFormat(
-                              'dd/MM/yyyy',
-                            ).format(picked);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
+                onPressed: () async {
+                  if (_selectedSite == null || _dateController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please fill all details')),
+                    );
+                    return;
+                  }
 
-            _buildChecklistSection(
-              title: 'Device Check',
-              color: const Color(0xFFFFF5C2),
-              titleColor: Color.fromARGB(255, 76, 11, 88),
-              items: [
-                'Heart Rate within Safe range 78 bpm',
-                'Oxygen level acceptable 98%',
-              ],
-            ),
-            _buildChecklistSection(
-              title: 'PPE',
-              color: const Color(0xFFE2F3F8),
-              titleColor: Color.fromARGB(
-                255,
-                76,
-                11,
-                88,
-              ), // Custom title color for PPE
-              items: [
-                'Helmet worn properly',
-                'Non-slip gloves worn',
-                'Safety shoes worn',
-              ],
-            ),
-            _buildChecklistSection(
-              title: 'Environment Check',
-              color: const Color(0xFFFFE3EC),
-              titleColor: Color.fromARGB(255, 76, 11, 88),
-              items: [
-                'Communication Device is working',
-                'Emergency exits clear',
-                'No loose tools on platform',
-              ],
-            ),
-            _buildChecklistSection(
-              title: 'Environment Awareness',
-              color: const Color(0xFFEEE5FF),
-              titleColor: Color.fromARGB(255, 76, 11, 88),
-              items: [
-                'Weather is safe for climbing',
-                'No lightning / storm warnings',
-                'Wind speed within limits',
-              ],
-            ),
+                  await FirebaseFirestore.instance.collection('attendance').add({
+                    'name':
+                        'Technician Name', // textfield controller use panna better
+                    'site': _selectedSite,
+                    'date': _dateController.text,
+                    'checklist': _checkedItems,
+                    'createdAt': Timestamp.now(),
+                  });
 
-            const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 76, 11, 88),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 50,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Attendance marked successfully!'),
+                    ),
+                  );
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HistoryPage()),
+                  );
+                },
+
+                child: const Text(
+                  'Mark The Attendance',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Attendance marked successfully!'),
-                  ),
-                );
-              },
-              child: const Text(
-                'Mark The Attendance',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: CurvedNavigationBar(
+          color: Color(0xffede7f6),
+          backgroundColor: Colors.transparent,
+          index: 0, // Select the initial tab index
+          onTap: (i) {
+            if (i == 0) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => HomePage()),
+              );
+            } else if (i == 1) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => HistoryPage()),
+              );
+            } else if (i == 2) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => UploadPage()),
+              );
+            } else if (i == 3) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => ChatBotScreen()),
+              );
+            } else if (i == 4) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => ProfileScreen()),
+              );
+            }
+          },
+          items: [
+            Icon(
+              Icons.home,
+              size: 30,
+              color: Color.fromARGB(255, 76, 11, 88), // Selected color
+            ),
+            Icon(
+              Icons.history,
+              size: 30,
+              color: Color.fromARGB(255, 76, 11, 88), // Unselected color
+            ),
+            Icon(
+              Icons.add,
+              size: 30,
+              color: Color.fromARGB(255, 76, 11, 88), // Unselected color
+            ),
+            Icon(
+              Icons.chat,
+              size: 30,
+              color: Color.fromARGB(255, 76, 11, 88), // Unselected color
+            ),
+            Icon(
+              Icons.person,
+              size: 30,
+              color: Color.fromARGB(255, 76, 11, 88), // Unselected color
             ),
           ],
+          animationCurve: Curves.easeInOut, // Optional for animation effect
+          animationDuration: const Duration(
+            milliseconds: 300,
+          ), // Optional for animation effect
         ),
-      ),
-      bottomNavigationBar: CurvedNavigationBar(
-        color: Color(0xffede7f6),
-        backgroundColor: Colors.white,
-        index: 0, // Select the initial tab index
-        onTap: (i) {
-          if (i == 0) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => HomePage()),
-            );
-          } else if (i == 1) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => HistoryPage()),
-            );
-          } else if (i == 2) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => UploadPage()),
-            );
-          } else if (i == 3) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => ChatBotScreen()),
-            );
-          } else if (i == 4) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => ProfileScreen()),
-            );
-          }
-        },
-        items: [
-          Icon(
-            Icons.home,
-            size: 30,
-            color: Color.fromARGB(255, 76, 11, 88), // Selected color
-          ),
-          Icon(
-            Icons.history,
-            size: 30,
-            color: Color.fromARGB(255, 76, 11, 88), // Unselected color
-          ),
-          Icon(
-            Icons.add,
-            size: 30,
-            color: Color.fromARGB(255, 76, 11, 88), // Unselected color
-          ),
-          Icon(
-            Icons.chat,
-            size: 30,
-            color: Color.fromARGB(255, 76, 11, 88), // Unselected color
-          ),
-          Icon(
-            Icons.person,
-            size: 30,
-            color: Color.fromARGB(255, 76, 11, 88), // Unselected color
-          ),
-        ],
-        animationCurve: Curves.easeInOut, // Optional for animation effect
-        animationDuration: const Duration(
-          milliseconds: 300,
-        ), // Optional for animation effect
       ),
     );
   }

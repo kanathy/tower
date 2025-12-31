@@ -7,9 +7,18 @@ class TowerListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: const BackButton(color: Color(0xFF4C0B58)),
@@ -140,6 +149,7 @@ class TowerListScreen extends StatelessWidget {
           );
         },
       ),
+      ),
     );
   }
 }
@@ -172,9 +182,18 @@ class TowerDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: const BackButton(color: Color(0xFF4C0B58)),
@@ -297,6 +316,7 @@ class TowerDetailPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

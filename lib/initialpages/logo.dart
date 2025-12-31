@@ -23,21 +23,31 @@ class _LogoScreenState extends State<LogoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Image at the top of the screen
-          Expanded(
-            flex: 3,
-            child: Image.asset(
-              'lib/assets/images/logo.png', // replace with your image path
-              // Ensure the logo covers the available space
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Image at the top of the screen
+            Expanded(
+              flex: 3,
+              child: Image.asset(
+                'lib/assets/images/logo.png', // replace with your image path
+                // Ensure the logo covers the available space
+              ),
             ),
-          ),
-          const SizedBox(height: 80),
-          // Optionally, add any other widgets here
-        ],
+            const SizedBox(height: 80),
+            // Optionally, add any other widgets here
+          ],
+        ),
       ),
     );
   }

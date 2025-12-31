@@ -97,21 +97,29 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: const BackButton(color: Color(0xFF4C0B58)),
-        title: const Text(
-          'Histroy',
-          style: TextStyle(
-            color: Color(0xFF4C0B58),
-            fontWeight: FontWeight.bold,
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
         ),
       ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          leading: const BackButton(color: Color(0xFF4C0B58)),
+          title: const Text(
+            'Histroy',
+            style: TextStyle(
+              color: Color(0xFF4C0B58),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       body: Column(
         children: [
           const SizedBox(height: 16),
@@ -127,10 +135,10 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
         ],
       ),
-      bottomNavigationBar: CurvedNavigationBar(
-        color: Color(0xffede7f6),
-        backgroundColor: Colors.white,
-        index: 0, // Select the initial tab index
+        bottomNavigationBar: CurvedNavigationBar(
+          color: const Color(0xffede7f6),
+          backgroundColor: Colors.transparent,
+          index: 1, // Select the initial tab index
         onTap: (i) {
           if (i == 0) {
             Navigator.pushReplacement(
@@ -190,6 +198,7 @@ class _HistoryPageState extends State<HistoryPage> {
         animationDuration: const Duration(
           milliseconds: 300,
         ), // Optional for animation effect
+      ),
       ),
     );
   }

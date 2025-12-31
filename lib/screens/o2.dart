@@ -58,33 +58,42 @@ class _BloodOxygenPageState extends State<BloodOxygenPage> {
       databaseURL:
           'https://towersafety-56937-default-rtdb.asia-southeast1.firebasedatabase.app',
     );
-    _ref = database.ref('employees/emp001/oxygenLevel');
+    _ref = database.ref('Device/SpO2');
     startMeasuring(); // Start measuring when the page loads
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Blood Oxygen Level',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Color.fromARGB(255, 76, 11, 88),
-          ),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Color.fromARGB(255, 76, 11, 88),
-          ),
-          onPressed: () => Navigator.pop(context),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
         ),
       ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'Blood Oxygen Level',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 76, 11, 88),
+            ),
+          ),
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Color.fromARGB(255, 76, 11, 88),
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -162,6 +171,7 @@ class _BloodOxygenPageState extends State<BloodOxygenPage> {
               ),
           ],
         ),
+      ),
       ),
     );
   }

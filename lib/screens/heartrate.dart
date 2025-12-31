@@ -10,8 +10,8 @@ class HeartRatePage extends StatefulWidget {
 class _HeartRatePageState extends State<HeartRatePage> {
   int heartRate = 0; // Store the heart rate value
   int progress = 0; // The percentage for the circular progress bar
-  bool isMeasuring = false;
-  DatabaseReference? _ref;
+  bool isMeasuring = false; // Flag to indicate measuring state
+  DatabaseReference? _ref; // Firebase reference for heart rate
 
   // Function to fetch heart rate from Firebase after measuring
   void startMeasuring() async {
@@ -52,8 +52,7 @@ class _HeartRatePageState extends State<HeartRatePage> {
       databaseURL:
           'https://towersafety-56937-default-rtdb.asia-southeast1.firebasedatabase.app',
     );
-    _ref = database.ref('employees/emp001/heartRate');
-
+    _ref = database.ref('Device/BPM');
     /*// Listen for real-time changes
   _ref!.onValue.listen((event) {
     final data = event.snapshot.value;
@@ -71,27 +70,36 @@ class _HeartRatePageState extends State<HeartRatePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Heart Rate',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Color.fromARGB(255, 76, 11, 88),
-          ),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Color.fromARGB(255, 76, 11, 88),
-          ),
-          onPressed: () => Navigator.pop(context),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
         ),
       ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'Heart Rate',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 76, 11, 88),
+            ),
+          ),
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Color.fromARGB(255, 76, 11, 88),
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -159,6 +167,7 @@ class _HeartRatePageState extends State<HeartRatePage> {
               ),
           ],
         ),
+      ),
       ),
     );
   }

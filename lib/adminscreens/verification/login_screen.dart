@@ -85,12 +85,20 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
         title: const Text(
           "Log into account",
           style: TextStyle(
@@ -109,10 +117,25 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
-                  child: Image.asset(
-                    'lib/assets/images/admin.png', // asset path
-                    height: 250,
-                    fit: BoxFit.contain,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4C0B58).withOpacity(0.15),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'lib/assets/images/admin.png', // asset path
+                        height: 250,
+                        width: 250,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -301,6 +324,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -34,19 +34,28 @@ class _ReminderScreenState extends State<ReminderScreen> {
     final allEntries =
         _reminders.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'All Reminders',
-          style: TextStyle(
-            color: Color(0xFF4C0B58),
-            fontWeight: FontWeight.bold,
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
         ),
-        backgroundColor: Colors.white,
-        elevation: 2,
-        iconTheme: const IconThemeData(color: Color(0xFF4C0B58)),
       ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text(
+            'All Reminders',
+            style: TextStyle(
+              color: Color(0xFF4C0B58),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Color(0xFF4C0B58)),
+        ),
       body:
           allEntries.isEmpty
               ? const Center(
@@ -97,6 +106,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
                   );
                 },
               ),
+      ),
     );
   }
 }

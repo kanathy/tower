@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "523987709660",
+    "firebase_url": "https://towersafety-56937-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "towersafety-56937",
     "storage_bucket": "towersafety-56937.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.example.tower"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "523987709660-rdj0ubho4urjg50j13q3d2gj0n9s7rf5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tower",
+            "certificate_hash": "97a1802b238f27b958ca19dc381366cee3fda7ca"
+          }
+        },
+        {
+          "client_id": "523987709660-719mil0l273d8u98hp4kfct8nsiojqjh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBNI-1dDQ56XYH85f69nzG3M2zN69d8mSU"
@@ -20,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "523987709660-719mil0l273d8u98hp4kfct8nsiojqjh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "523987709660-bpb9sphrje6k6t2ldac7renp4ta9s0jb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.tower"
+              }
+            }
+          ]
         }
       }
     }

@@ -66,20 +66,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _selectedDay != null ? _dateKey(_selectedDay!) : _dateKey(_focusedDay);
     final selectedReminders = _reminders[selectedKey] ?? [];
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: const BackButton(color: Color(0xFF4C0B58)),
-        title: const Text(
-          'Calendar',
-          style: TextStyle(
-            color: Color(0xFF4C0B58),
-            fontWeight: FontWeight.bold,
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
         ),
       ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          leading: const BackButton(color: Color(0xFF4C0B58)),
+          title: const Text(
+            'Calendar',
+            style: TextStyle(
+              color: Color(0xFF4C0B58),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       body: Column(
         children: [
           Padding(
@@ -171,6 +180,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -17,30 +17,44 @@ class _TaskToDoScreenState extends State<TaskToDoScreen> {
   String _selectedCategory = 'All';
 
   final List<_TaskItem> _tasks = [
-    _TaskItem('Morning Exercise', 'Today', const Color(0xFFe4f9f5), 'Daily'),
-    _TaskItem('UI Fixes', 'Yesterday', const Color(0xFFfce4ec), 'Weekly'),
     _TaskItem(
-      'Backend Refactor',
-      '3 Days ago',
+      'Check Tower Power Supply',
+      'Today',
+      const Color(0xFFe4f9f5),
+      'Daily',
+    ),
+    _TaskItem(
+      'Inspect Generator Fuel Level',
+      'Today',
+      const Color(0xFFf3e5f5),
+      'Daily',
+    ),
+    _TaskItem(
+      'Antenna Alignment Check',
+      'Yesterday',
       const Color(0xFFfff3e0),
       'Weekly',
     ),
-
-    _TaskItem('Check Email', 'Today', const Color(0xFFf3e5f5), 'Daily'),
     _TaskItem(
-      'Sprint Planning',
+      'Signal Strength Measurement',
+      '3 Days ago',
+      const Color(0xFFfce4ec),
+      'Weekly',
+    ),
+    _TaskItem(
+      'Battery Backup Maintenance',
       'Last Monday',
       const Color(0xFFe8f5e9),
       'Monthly',
     ),
     _TaskItem(
-      'Database Cleanup',
+      'Tower Safety Inspection',
       '1 Week ago',
       const Color(0xFFede7f6),
-      'Weekly',
+      'Monthly',
     ),
     _TaskItem(
-      'Publish Report',
+      'Update Maintenance Report',
       'Last Month',
       const Color(0xFFfbe9e7),
       'Monthly',
@@ -57,12 +71,20 @@ class _TaskToDoScreenState extends State<TaskToDoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      bottomNavigationBar: CurvedNavigationBar(
-        color: Color(0xffede7f6),
-        backgroundColor: Colors.white,
-        index: 0, // Select the initial tab index
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        bottomNavigationBar: CurvedNavigationBar(
+          color: Color(0xffede7f6),
+          backgroundColor: Colors.transparent,
+          index: 0, // Select the initial tab index
         onTap: (i) {
           if (i == 0) {
             Navigator.pushReplacement(
@@ -123,30 +145,30 @@ class _TaskToDoScreenState extends State<TaskToDoScreen> {
           milliseconds: 300,
         ), // Optional for animation effect
       ),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Task To Do',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Color.fromARGB(255, 76, 11, 88),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'Task To Do',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 76, 11, 88),
+            ),
+          ),
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Color.fromARGB(255, 76, 11, 88),
+            ),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+                ),
           ),
         ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Color.fromARGB(255, 76, 11, 88),
-          ),
-          onPressed:
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HomePage()),
-              ),
-        ),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
@@ -158,6 +180,7 @@ class _TaskToDoScreenState extends State<TaskToDoScreen> {
             _buildTasksSection(),
           ],
         ),
+      ),
       ),
     );
   }

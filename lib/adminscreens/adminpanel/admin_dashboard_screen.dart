@@ -5,7 +5,7 @@ import 'package:tower/adminscreens/widgets/dashboard_card.dart'; // Adjust impor
 import 'package:tower/adminscreens/widgets/category_item.dart'; // Adjust import based on your actual structure
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:tower/adminscreens/adminpanel/employee/employee_details_screen.dart';
+import 'package:tower/adminscreens/adminpanel/employee_detail_screen.dart';
 import 'package:tower/adminscreens/adminpanel/report_analytics_screen.dart';
 import 'package:tower/adminscreens/adminpanel/safety_measures_screen.dart';
 import 'package:tower/adminscreens/adminpanel/attendance_screen.dart';
@@ -43,105 +43,114 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100], // Light background color from Figma
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        toolbarHeight: 100, // make room for Hi Admin + Welcome text
-        leadingWidth: 85,
-        leading: Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: Stack(
-            children: [
-              CircleAvatar(
-                radius: 42.5,
-                backgroundImage:
-                    _profileImage != null
-                        ? FileImage(_profileImage!)
-                        : const AssetImage('lib/assets/images/avatar.png')
-                            as ImageProvider,
-                backgroundColor: Colors.grey[300],
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey, width: 1),
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      size: 16,
-                      color: Colors.black,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          toolbarHeight: 100, // make room for Hi Admin + Welcome text
+          leadingWidth: 85,
+          leading: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 42.5,
+                  backgroundImage:
+                      _profileImage != null
+                          ? FileImage(_profileImage!)
+                          : const AssetImage('lib/assets/images/avatar.png')
+                              as ImageProvider,
+                  backgroundColor: Colors.grey[300],
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey, width: 1),
+                      ),
+                      child: const Icon(
+                        Icons.edit,
+                        size: 16,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+          title: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Text(
+                'Hi Admin!',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 73, 27, 109),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'Welcome to TowerPulse!',
+                style: TextStyle(color: Colors.black54, fontSize: 14),
               ),
             ],
           ),
-        ),
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Text(
-              'Hi Admin!',
-              style: TextStyle(
-                color: Color.fromARGB(255, 73, 27, 109),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.notifications_none, color: Colors.black),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NotificationPage()),
+                );
+              },
             ),
-            Text(
-              'Welcome to TowerPulse!',
-              style: TextStyle(color: Colors.black54, fontSize: 14),
-            ),
+            const SizedBox(width: 8),
           ],
         ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const NotificationPage()),
-              );
-            },
+
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4.0),
+
+              _buildSearchBar(),
+              const SizedBox(height: 24.0),
+
+              _buildMainCardsGrid(context), // Pass context for navigation
+              const SizedBox(height: 2.0),
+
+              const Text(
+                'Categories',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 73, 27, 109),
+                ),
+              ),
+              const SizedBox(height: 12.0),
+              _buildCategoriesRow(context), // Pass context for navigation
+            ],
           ),
-          const SizedBox(width: 8),
-        ],
-      ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4.0),
-
-            _buildSearchBar(),
-            const SizedBox(height: 24.0),
-
-            _buildMainCardsGrid(context), // Pass context for navigation
-            const SizedBox(height: 2.0),
-
-            const Text(
-              'Categories',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 73, 27, 109),
-              ),
-            ),
-            const SizedBox(height: 12.0),
-            _buildCategoriesRow(context), // Pass context for navigation
-          ],
         ),
       ),
     );
@@ -186,14 +195,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       childAspectRatio: 0.9,
       children: [
         DashboardCard(
-          title: 'Employee Details',
+          title: 'Staff Details',
           iconPath:
-              'lib/assets/images/attendance.png', // Replace with your actual asset path
+              'lib/assets/images/staffs.png', // Using staff icon for details
           backgroundColor: const Color.fromARGB(230, 230, 230, 255),
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const EmployeeDetailsScreen()),
+              MaterialPageRoute(builder: (_) => const StaffsScreen()),
             );
           },
         ),
@@ -267,13 +276,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           const SizedBox(width: 12.0),
           CategoryItem(
-            title: 'Staffs',
-            iconPath: 'lib/assets/images/staffs.png',
+            title: 'Attendance',
+            iconPath: 'lib/assets/images/attendance.png',
             backgroundColor: const Color(0xFFF0F0F0),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const StaffPage()),
+                MaterialPageRoute(builder: (_) => const AttendanceScreen()),
               );
             },
           ),
