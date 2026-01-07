@@ -102,7 +102,11 @@ class _SafetyMeasuresScreenState extends State<SafetyMeasuresScreen>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+          colors: [
+            Color(0xFFE1BEE7), // Richer Light Purple
+            Color(0xFFD1C4E9), // Deeper Lavender
+            Color(0xFFB3E5FC), // Saturated Light Blue
+          ],
         ),
       ),
       child: Scaffold(
@@ -394,7 +398,7 @@ class _SafetyMeasuresScreenState extends State<SafetyMeasuresScreen>
           crossAxisCount: 2,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 1.3,
+          childAspectRatio: 1.15,
         ),
         itemCount: safetyTips.length,
         itemBuilder: (context, index) {

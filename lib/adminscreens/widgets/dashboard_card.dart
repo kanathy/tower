@@ -43,19 +43,16 @@ class DashboardCard extends StatelessWidget {
                 MainAxisAlignment.center, // Center content vertically
             children: [
               Container(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(
-                    230,
-                    230,
-                    230,
-                    255,
-                  ), // White background for the icon circle
+                  color: const Color.fromARGB(230, 230, 230, 255),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Image.asset(
                   iconPath!,
-                  width: 140,
-                  height: 100,
+                  width: 70,
+                  height: 70,
+                  fit: BoxFit.contain,
                 ), // Display image asset
               ),
               const SizedBox(height: 8.0), // Space between icon and text

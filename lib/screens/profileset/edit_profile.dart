@@ -44,7 +44,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+          colors: [
+            Color(0xFFE1BEE7), // Richer Light Purple
+            Color(0xFFD1C4E9), // Deeper Lavender
+            Color(0xFFB3E5FC), // Saturated Light Blue
+          ],
         ),
       ),
       child: Scaffold(
@@ -61,14 +65,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 60.0),
           child: Column(
             children: [
               const SizedBox(height: 20),
               const CircleAvatar(
                 radius: 50,
-                backgroundImage: AssetImage("assets/profile.png"),
+                backgroundImage: AssetImage("lib/assets/images/avatar.png"),
               ),
               const SizedBox(height: 10),
               GestureDetector(
@@ -83,61 +87,63 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: ListView(
-                  children: [
-                    TextField(
-                      controller: usernameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    TextField(
-                      controller: emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email ID',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    TextField(
-                      controller: phoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone Number',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    TextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _updateProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6F4F96),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text(
-                          "Update",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 30),
+              TextField(
+                controller: usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person_outline),
                 ),
               ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email Address',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _updateProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4C0B58), // Matching theme
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    "Update Profile",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),

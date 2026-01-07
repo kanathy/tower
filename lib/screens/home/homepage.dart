@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:tower/screens/task.dart';
 import 'package:tower/screens/home/attendance.dart';
 import 'package:tower/screens/notification.dart';
@@ -13,6 +14,13 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'dart:async';
+import 'package:tower/services/notification_service.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:tower/services/weather_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,6 +32,286 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final User? currentUser = FirebaseAuth.instance.currentUser;
   bool _showAllPosts = false;
+  StreamSubscription? _heartRateSub;
+  StreamSubscription? _o2Sub;
+  StreamSubscription? _postSub;
+  Position? _currentPosition;
+  Map<String, dynamic>? _weatherData;
+  final WeatherService _weatherService = WeatherService();
+  bool _isLoadingWeather = false;
+  String? _weatherError;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupHealthListeners();
+    _setupPostListener();
+    _requestLocationPermission();
+  }
+
+  @override
+  void dispose() {
+    _heartRateSub?.cancel();
+    _o2Sub?.cancel();
+    _postSub?.cancel();
+    super.dispose();
+  }
+
+  // ---------------- Location Permission ----------------
+  Future<void> _requestLocationPermission() async {
+    var status = await Permission.location.status;
+
+    if (status.isDenied) {
+      if (await Permission.location.request().isGranted) {
+        print("Location permission granted");
+        _getCurrentLocation();
+      } else {
+        print("Location permission denied");
+      }
+    } else if (status.isPermanentlyDenied) {
+      await openAppSettings();
+    } else if (status.isGranted) {
+      _getCurrentLocation();
+    }
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      _isLoadingWeather = true;
+      _weatherError = null;
+    });
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() {
+          _weatherError = "Location services are disabled in settings.";
+          _isLoadingWeather = false;
+        });
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            _weatherError = "Location permission denied.";
+            _isLoadingWeather = false;
+          });
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          _weatherError = "Location permission permanently denied. Please enable in settings.";
+          _isLoadingWeather = false;
+        });
+        return;
+      }
+
+      // Try last known position first for speed
+      Position? position = await Geolocator.getLastKnownPosition();
+      
+      if (position != null) {
+        print('Using last known position: ${position.latitude}, ${position.longitude}');
+        setState(() => _currentPosition = position);
+        _fetchWeather(position.latitude, position.longitude);
+      }
+
+      // Then get fresh position
+      position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 5), // Quicker timeout
+      );
+
+      setState(() {
+        _currentPosition = position;
+      });
+
+      _fetchWeather(position!.latitude, position!.longitude);
+      print('Current fresh location: ${position.latitude}, ${position.longitude}');
+    } catch (e) {
+      print('DEBUG: Location fetch failed: $e');
+      if (_currentPosition == null) {
+        setState(() {
+          _weatherError = "Could not get location. Ensure GPS is on and try again.";
+          _isLoadingWeather = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchWeather(double lat, double lon) async {
+    setState(() {
+      _isLoadingWeather = true;
+      _weatherError = null;
+    });
+    final data = await _weatherService.fetchWeather(lat, lon);
+    setState(() {
+      _weatherData = data;
+      _isLoadingWeather = false;
+      if (data == null) {
+        _weatherError = "Failed to load weather data.";
+      }
+    });
+  }
+
+  void _showWeatherDialog() {
+    if (_weatherData == null) {
+      String msg = _isLoadingWeather ? "Fetching weather..." : (_weatherError ?? "Weather data unavailable. Tap to retry.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          action: SnackBarAction(
+            label: 'Retry',
+            onPressed: _getCurrentLocation,
+          ),
+        ),
+      );
+      if (!_isLoadingWeather) _getCurrentLocation();
+      return;
+    }
+
+    final temp = _weatherData!['main']['temp'];
+    final condition = _weatherData!['weather'][0]['main'];
+    final description = _weatherData!['weather'][0]['description'];
+    final humidity = _weatherData!['main']['humidity'];
+    final windSpeed = _weatherData!['wind']['speed'];
+    final city = _weatherData!['name'];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.wb_cloudy_rounded, color: Color(0xFF4C0B58)),
+            const SizedBox(width: 10),
+            Text("Weather in $city", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Column(
+                children: [
+                  Text("$temp°C", style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: Color(0xFF4C0B58))),
+                  Text(condition, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  Text(description, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 10),
+            _buildWeatherDetail(Icons.water_drop, "Humidity", "$humidity%"),
+            _buildWeatherDetail(Icons.air, "Wind Speed", "${windSpeed} m/s"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close", style: TextStyle(color: Color(0xFF4C0B58))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeatherDetail(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: const Color(0xFF4C0B58)),
+          const SizedBox(width: 10),
+          Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(value),
+        ],
+      ),
+    );
+  }
+
+  void _setupHealthListeners() {
+    final database = FirebaseDatabase.instanceFor(
+      app: Firebase.app(),
+      databaseURL:
+          'https://towersafety-56937-default-rtdb.asia-southeast1.firebasedatabase.app',
+    );
+
+    // Heart Rate Listener
+    _heartRateSub = database.ref('Device/BPM').onValue.listen((event) {
+      final val = event.snapshot.value;
+      if (val is int) {
+        if (val > 100) {
+          NotificationService.addNotification(
+            message:
+                'Warning: High Heart Rate detected ($val bpm). Please rest.',
+            type: 'health_alert',
+            buttonText: 'Check Pulse',
+          );
+        } else if (val < 60 && val > 0) {
+          NotificationService.addNotification(
+            message: 'Warning: Low Heart Rate detected ($val bpm).',
+            type: 'health_alert',
+            buttonText: 'Check Pulse',
+          );
+        }
+      }
+    });
+
+    // Oxygen Level Listener
+    _o2Sub = database.ref('Device/SpO2').onValue.listen((event) {
+      final val = event.snapshot.value;
+      if (val is int && val < 95 && val > 0) {
+        NotificationService.addNotification(
+          message:
+              'Warning: Low Oxygen level detected ($val%). Ensure proper ventilation.',
+          type: 'health_alert',
+          buttonText: 'Check O2',
+        );
+      }
+    });
+
+    // Fall Detection Listener (Assuming path Device/Fall)
+    database.ref('Device/Fall').onValue.listen((event) {
+      final val = event.snapshot.value;
+      if (val == true) {
+        NotificationService.addNotification(
+          message: 'EMERGENCY: Fall detected! Are you okay?',
+          type: 'emergency',
+          buttonText: 'I am Okay',
+        );
+      }
+    });
+  }
+
+  void _setupPostListener() {
+    // Listen for new posts from others
+    _postSub = FirebaseFirestore.instance
+        .collection('post')
+        .where('timestamp', isGreaterThan: Timestamp.now())
+        .snapshots()
+        .listen((snapshot) {
+          for (var change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.added) {
+              final data = change.doc.data() as Map<String, dynamic>;
+              if (data['authorId'] != currentUser?.uid) {
+                NotificationService.addNotification(
+                  message:
+                      '${data['authorName'] ?? 'Someone'} shared a new safety update.',
+                  type: 'feed_update',
+                  buttonText: 'View Feed',
+                );
+              }
+            }
+          }
+        });
+  }
 
   void _handleLike(String postId, List likedBy) async {
     if (currentUser == null) return;
@@ -325,15 +613,15 @@ class _HomePageState extends State<HomePage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
           decoration: BoxDecoration(
-            color: pillColor,
+            color: pillColor.withOpacity(0.9), // Slightly more solid for better contrast
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
             label,
             style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 13.5,
+              color: Color(0xFF4C0B58), // Dark purple for high contrast
+              fontWeight: FontWeight.bold, // Bolder for better visibility
+              fontSize: 13,
             ),
           ),
         ),
@@ -358,7 +646,10 @@ class _HomePageState extends State<HomePage> {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.shade200)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14.0),
         child: Column(
@@ -367,73 +658,92 @@ class _HomePageState extends State<HomePage> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundImage: (authorAvatar != null && authorAvatar.isNotEmpty) 
-                    ? NetworkImage(authorAvatar) 
-                    : const AssetImage('lib/assets/images/avatar.png') as ImageProvider,
+                  backgroundImage:
+                      (authorAvatar != null && authorAvatar.isNotEmpty)
+                          ? NetworkImage(authorAvatar)
+                          : const AssetImage('lib/assets/images/avatar.png')
+                              as ImageProvider,
                   radius: 22,
                 ),
                 const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          authorName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Color(0xFF2D3436),
-                          ),
-                        ),
-                        if (authorRole != null && authorRole.isNotEmpty) ...[
-                          const SizedBox(width: 6),
-                          const Text("·", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(width: 6),
-                          Text(
-                            authorRole,
-                            style: const TextStyle(
-                              color: Color(0xFF636E72),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              authorName,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Color(0xFF2D3436),
+                              ),
                             ),
                           ),
+                          if (authorRole != null && authorRole.isNotEmpty) ...[
+                            const SizedBox(width: 6),
+                            const Text(
+                              "·",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                authorRole,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0xFF636E72),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                    Text(
-                      timestamp != null 
-                        ? "${timestamp.toDate().day}/${timestamp.toDate().month} - ${timestamp.toDate().hour}:${timestamp.toDate().minute}" 
-                        : "Official Update",
-                      style: const TextStyle(color: Color(0xFFB2BEC3), fontSize: 12),
-                    ),
-                  ],
+                      ),
+                      Text(
+                        timestamp != null
+                            ? "${timestamp.toDate().day}/${timestamp.toDate().month} - ${timestamp.toDate().hour}:${timestamp.toDate().minute}"
+                            : "Official Update",
+                        style: const TextStyle(
+                          color: Color(0xFFB2BEC3),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            Text(
-              content,
-              style: const TextStyle(fontSize: 14),
-            ),
+            Text(content, style: const TextStyle(fontSize: 14)),
             if (imageUrl != null && imageUrl.isNotEmpty) ...[
               const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: imageUrl.toString().startsWith('http') 
-                  ? Image.network(
-                      imageUrl,
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
-                    )
-                  : Image.asset(
-                      imageUrl,
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                    ),
+                child:
+                    imageUrl.toString().startsWith('http')
+                        ? Image.network(
+                          imageUrl,
+                          width: double.infinity,
+                          height: 200,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (context, error, stackTrace) =>
+                                  const Icon(Icons.error),
+                        )
+                        : Image.asset(
+                          imageUrl,
+                          width: double.infinity,
+                          height: 200,
+                          fit: BoxFit.cover,
+                        ),
               ),
             ],
             const SizedBox(height: 15),
@@ -454,9 +764,10 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         "$likes",
                         style: TextStyle(
-                          fontSize: 14, 
+                          fontSize: 14,
                           color: isLiked ? Colors.blue : Colors.grey,
-                          fontWeight: isLiked ? FontWeight.bold : FontWeight.normal,
+                          fontWeight:
+                              isLiked ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -467,11 +778,7 @@ class _HomePageState extends State<HomePage> {
                   onTap: () => _handleComment(postId, []),
                   child: Row(
                     children: const [
-                      Icon(
-                        Icons.comment,
-                        size: 18,
-                        color: Color(0xFF8E319B),
-                      ),
+                      Icon(Icons.comment, size: 18, color: Color(0xFF8E319B)),
                       SizedBox(width: 8),
                       Text(
                         "Comment",
@@ -485,11 +792,7 @@ class _HomePageState extends State<HomePage> {
                   onTap: () => _handleShare(content),
                   child: Row(
                     children: const [
-                      Icon(
-                        Icons.share,
-                        size: 18,
-                        color: Color(0xFF8E319B),
-                      ),
+                      Icon(Icons.share, size: 18, color: Color(0xFF8E319B)),
                       SizedBox(width: 8),
                       Text(
                         "Share",
@@ -503,11 +806,7 @@ class _HomePageState extends State<HomePage> {
                   onTap: _handleSend,
                   child: Row(
                     children: const [
-                      Icon(
-                        Icons.send,
-                        size: 18,
-                        color: Color(0xFF8E319B),
-                      ),
+                      Icon(Icons.send, size: 18, color: Color(0xFF8E319B)),
                       SizedBox(width: 8),
                       Text(
                         "Send",
@@ -525,82 +824,91 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget featureGrid(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              buildFeatureCard(
-                "Attendance",
-                "lib/assets/images/attendance.png",
-                const Color(0xFF6D3AF3),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const SafetyChecklistScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(width: 20),
-              buildFeatureCard(
-                "Tasks",
-                "lib/assets/images/task.png",
-                const Color(0xFF6436A6),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const TaskToDoScreen()),
-                  );
-                },
-              ),
-              const SizedBox(width: 20),
-              buildFeatureCard(
-                "Towers",
-                "lib/assets/images/tower.png",
-                const Color(0xFF8E319B),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => TowerListScreen()),
-                  );
-                },
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Quick Services",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color.fromARGB(255, 76, 11, 88),
           ),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              buildFeatureCard(
-                "Heart Rate",
-                "lib/assets/images/heartrate.png",
-                const Color(0xFF5945A3),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => HeartRatePage()),
-                  );
-                },
-              ),
-              const SizedBox(width: 30),
-              buildFeatureCard(
-                "Oxygen Level",
-                "lib/assets/images/oxygen.png",
-                const Color(0xFF6237A0),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => BloodOxygenPage()),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            buildFeatureCard(
+              "Attendance",
+              'lib/assets/images/attendance.png',
+              const Color(0xFFF3E5F5), // Light purple
+              size: 100,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SafetyChecklistScreen()),
+                );
+              },
+            ),
+            buildFeatureCard(
+              "Tasks",
+              'lib/assets/images/task.png',
+              const Color(0xFFE8F5E9), // Light green
+              size: 100,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TaskToDoScreen()),
+                );
+              },
+            ),
+            buildFeatureCard(
+              "Towers",
+              'lib/assets/images/tower.png',
+              const Color(0xFFE1F5FE), // Light blue
+              size: 100,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TowerListScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            buildFeatureCard(
+              "Heart Rate",
+              'lib/assets/images/heartrate.png',
+              const Color(0xFFFFF3E0), // Light orange
+              size: 100,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => HeartRatePage()),
+                );
+              },
+            ),
+            const SizedBox(width: 16),
+            buildFeatureCard(
+              "Oxygen Level",
+              'lib/assets/images/oxygen.png',
+              const Color(0xFFFFEBEE), // Light red
+              size: 100,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => BloodOxygenPage()),
+                );
+              },
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -611,7 +919,11 @@ class _HomePageState extends State<HomePage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+          colors: [
+            Color(0xFFE1BEE7), // Richer Light Purple
+            Color(0xFFD1C4E9), // Deeper Lavender
+            Color(0xFFB3E5FC), // Saturated Light Blue
+          ],
         ),
       ),
       child: Scaffold(
@@ -689,51 +1001,98 @@ class _HomePageState extends State<HomePage> {
               // Search bar with weather and notification inside left
               Row(
                 children: [
-                  // Weather Icon and Label (inside the bar, left)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 255, 255, 255),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    margin: EdgeInsets.only(right: 8),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.wb_cloudy_outlined,
-                          color: Color.fromARGB(255, 76, 11, 88),
-                          size: 25,
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.notifications_none,
-                            color: Color.fromARGB(255, 76, 11, 88),
-                            size: 25,
+                  // Glassmorphic Weather & Notification Card
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.4),
+                            width: 1.5,
                           ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => NotificationScreen(),
-                              ),
-                            );
-                          },
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF4C0B58).withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        margin: const EdgeInsets.only(right: 12),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              constraints: const BoxConstraints(),
+                              padding: EdgeInsets.zero,
+                              icon: _isLoadingWeather
+                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4C0B58)))
+                                  : const Icon(
+                                      Icons.wb_cloudy_rounded,
+                                      color: Color(0xFF4C0B58),
+                                      size: 26,
+                                    ),
+                              onPressed: _showWeatherDialog,
+                            ),
+                            const SizedBox(width: 12),
+                            Container(
+                              width: 1.5,
+                              height: 20,
+                              color: const Color(0xFF4C0B58).withOpacity(0.2),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              constraints: const BoxConstraints(),
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                Icons.notifications_none_rounded,
+                                color: Color(0xFF4C0B58),
+                                size: 28,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => NotificationScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  // Search Field (expanded)
+                  // Search Field (Elevated glass look)
                   Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: "Search Here",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.5),
+                          width: 1,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 2,
-                          horizontal: 10,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: "Search Here",
+                          hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                          prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade600),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18),
                         ),
                       ),
                     ),
@@ -776,18 +1135,20 @@ class _HomePageState extends State<HomePage> {
                 postId: "default_safety_alert_1",
                 authorName: "Alex Rivera",
                 authorRole: "Site Supervisor",
-                content: "Important Safety Alert: Always double-check your full-body harness and lanyard before every climb. Ensure the site anchor points are certified and clearly marked. Safety is our top priority when working on towers! #TowerPulse #SafetyFirst",
+                content:
+                    "Important Safety Alert: Always double-check your full-body harness and lanyard before every climb. Ensure the site anchor points are certified and clearly marked. Safety is our top priority when working on towers! #TowerPulse #SafetyFirst",
                 likes: 124,
                 likedBy: [],
               ),
-              
+
               if (_showAllPosts) ...[
                 // Default Static Post 2
                 postCard(
                   postId: "default_safety_alert_2",
                   authorName: "Sarah Chen",
                   authorRole: "Safety Compliance",
-                  content: "Weather Warning: High winds expected this afternoon. Please suspend all climbing activities if wind speeds exceed 25mph. Stay safe and stay grounded! 💨🚧 #SafetyAlert #WeatherWatch",
+                  content:
+                      "Weather Warning: High winds expected this afternoon. Please suspend all climbing activities if wind speeds exceed 25mph. Stay safe and stay grounded! 💨🚧 #SafetyAlert #WeatherWatch",
                   likes: 85,
                   likedBy: [],
                 ),
@@ -796,35 +1157,41 @@ class _HomePageState extends State<HomePage> {
                   postId: "default_safety_alert_3",
                   authorName: "Marcus Johnson",
                   authorRole: "Equipment Lead",
-                  content: "Weekly Gear Check: REMINDER to inspect your pulleys and carabiners for any signs of wear or hairline cracks. If in doubt, swap it out! Don't take chances with your gear. 🛠️👷‍♂️ #SafeGear #TowerMaintenance",
+                  content:
+                      "Weekly Gear Check: REMINDER to inspect your pulleys and carabiners for any signs of wear or hairline cracks. If in doubt, swap it out! Don't take chances with your gear. 🛠️👷‍♂️ #SafeGear #TowerMaintenance",
                   likes: 92,
                   likedBy: [],
                 ),
                 StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance.collection('post').orderBy('timestamp', descending: true).snapshots(),
+                  stream:
+                      FirebaseFirestore.instance
+                          .collection('post')
+                          .orderBy('timestamp', descending: true)
+                          .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return const SizedBox(); 
+                      return const SizedBox();
                     }
-                    
+
                     return Column(
-                      children: snapshot.data!.docs.map((doc) {
-                        final d = doc.data() as Map<String, dynamic>;
-                        return postCard(
-                          postId: doc.id,
-                          authorName: d['authorName'] ?? "User",
-                          authorAvatar: d['authorAvatar'],
-                          authorRole: d['authorRole'],
-                          content: d['content'] ?? "",
-                          imageUrl: d['imageUrl'],
-                          likes: d['likes'] ?? 0,
-                          likedBy: d['likedBy'] as List? ?? [],
-                          timestamp: d['timestamp'] as Timestamp?,
-                        );
-                      }).toList(),
+                      children:
+                          snapshot.data!.docs.map((doc) {
+                            final d = doc.data() as Map<String, dynamic>;
+                            return postCard(
+                              postId: doc.id,
+                              authorName: d['authorName'] ?? "User",
+                              authorAvatar: d['authorAvatar'],
+                              authorRole: d['authorRole'],
+                              content: d['content'] ?? "",
+                              imageUrl: d['imageUrl'],
+                              likes: d['likes'] ?? 0,
+                              likedBy: d['likedBy'] as List? ?? [],
+                              timestamp: d['timestamp'] as Timestamp?,
+                            );
+                          }).toList(),
                     );
                   },
                 ),

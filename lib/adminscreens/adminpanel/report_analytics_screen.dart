@@ -17,7 +17,11 @@ class ReportAnalyticsScreen extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+          colors: [
+            Color(0xFFE1BEE7), // Richer Light Purple
+            Color(0xFFD1C4E9), // Deeper Lavender
+            Color(0xFFB3E5FC), // Saturated Light Blue
+          ],
         ),
       ),
       child: Scaffold(
@@ -694,12 +698,14 @@ class ReportAnalyticsScreen extends StatelessWidget {
                 child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF4C0B58), size: 20),
               ),
               const SizedBox(width: 12),
-              const Text(
-                "AI-Powered Recommendations",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF4C0B58),
+              const Expanded(
+                child: Text(
+                  "AI-Powered Recommendations",
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF4C0B58),
+                  ),
                 ),
               ),
             ],

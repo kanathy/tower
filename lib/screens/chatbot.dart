@@ -29,7 +29,11 @@ class ChatBotScreen extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+          colors: [
+            Color(0xFFE1BEE7), // Richer Light Purple
+            Color(0xFFD1C4E9), // Deeper Lavender
+            Color(0xFFB3E5FC), // Saturated Light Blue
+          ],
         ),
       ),
       child: Scaffold(

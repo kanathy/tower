@@ -102,7 +102,11 @@ class _HistoryPageState extends State<HistoryPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+          colors: [
+            Color(0xFFE1BEE7), // Richer Light Purple
+            Color(0xFFD1C4E9), // Deeper Lavender
+            Color(0xFFB3E5FC), // Saturated Light Blue
+          ],
         ),
       ),
       child: Scaffold(
@@ -113,7 +117,7 @@ class _HistoryPageState extends State<HistoryPage> {
           centerTitle: true,
           leading: const BackButton(color: Color(0xFF4C0B58)),
           title: const Text(
-            'Histroy',
+            'History',
             style: TextStyle(
               color: Color(0xFF4C0B58),
               fontWeight: FontWeight.bold,
@@ -237,16 +241,19 @@ class _HistoryPageState extends State<HistoryPage> {
     ),
   );
 
-  Widget _filterRow() => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8),
+  Widget _filterRow() => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    padding: const EdgeInsets.symmetric(horizontal: 16),
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children:
           [
             'Fall Detection',
             'Location',
             'Emergency Alerts',
-          ].map(_filterButton).toList(),
+          ].map((label) => Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _filterButton(label),
+          )).toList(),
     ),
   );
 
@@ -298,21 +305,27 @@ class _HistoryPageState extends State<HistoryPage> {
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  d['date']!,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const Text(
-                  'Technicians Safety Monitoring',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    d['date']!,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const Text(
+                    'Technicians Safety Monitoring',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-            const Text('Delete Record', style: TextStyle(color: Colors.red)),
+            const SizedBox(width: 8),
+            const Text('Delete Record', style: TextStyle(color: Colors.red, fontSize: 12)),
           ],
         ),
         const SizedBox(height: 10),

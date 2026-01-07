@@ -53,6 +53,9 @@ dependencies:
   cloud_firestore: ^5.6.9
   firebase_storage: ^12.4.10
   share_plus: ^12.0.1
+  rxdart: ^0.28.0
+  geolocator: ^14.0.2
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

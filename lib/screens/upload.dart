@@ -10,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:typed_data';
+import 'package:tower/services/notification_service.dart';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -149,6 +150,12 @@ class _UploadPageState extends State<UploadPage> {
         'likedBy': [],
         'commentList': [],
       });
+
+      await NotificationService.addNotification(
+        message: 'Your safety post has been uploaded successfully.',
+        type: 'post',
+        buttonText: 'View Feed',
+      );
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -181,9 +188,9 @@ class _UploadPageState extends State<UploadPage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFF3E5F5),
-            Colors.white,
-            Color(0xFFE1F5FE),
+            Color(0xFFE1BEE7), // Richer Light Purple
+            Color(0xFFD1C4E9), // Deeper Lavender
+            Color(0xFFB3E5FC), // Saturated Light Blue
           ],
         ),
       ),
@@ -460,29 +467,31 @@ class _UploadPageState extends State<UploadPage> {
           ),
         ),
         bottomNavigationBar: CurvedNavigationBar(
-          color: Colors.white.withOpacity(0.9),
+          color: const Color(0xffede7f6),
           backgroundColor: Colors.transparent,
           index: 2,
           onTap: (i) {
             if (i == 0) {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage()));
             } else if (i == 1) {
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HistoryPage()));
+            } else if (i == 2) {
+              // Already on Upload
             } else if (i == 3) {
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ChatBotScreen()));
             } else if (i == 4) {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ProfileScreen()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
             }
           },
           items: const [
-            Icon(Icons.home_rounded, size: 30, color: Color(0xFF4C0B58)),
-            Icon(Icons.history_rounded, size: 30, color: Color(0xFF4C0B58)),
-            Icon(Icons.add_rounded, size: 35, color: Color(0xFF4C0B58)),
-            Icon(Icons.chat_bubble_rounded, size: 30, color: Color(0xFF4C0B58)),
-            Icon(Icons.person_rounded, size: 30, color: Color(0xFF4C0B58)),
+            Icon(Icons.home, size: 30, color: Color(0xFF4C0B58)),
+            Icon(Icons.history, size: 30, color: Color(0xFF4C0B58)),
+            Icon(Icons.add, size: 30, color: Color(0xFF4C0B58)),
+            Icon(Icons.chat, size: 30, color: Color(0xFF4C0B58)),
+            Icon(Icons.person, size: 30, color: Color(0xFF4C0B58)),
           ],
-          animationCurve: Curves.easeInOutExpo,
-          animationDuration: const Duration(milliseconds: 500),
+          animationCurve: Curves.easeInOut,
+          animationDuration: const Duration(milliseconds: 300),
         ),
       ),
     );

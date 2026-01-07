@@ -9,6 +9,8 @@ import 'package:tower/screens/upload.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tower/services/notification_service.dart';
 
 class SafetyChecklistScreen extends StatefulWidget {
   const SafetyChecklistScreen({super.key});
@@ -38,7 +40,11 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF3E5F5), Colors.white, Color(0xFFE1F5FE)],
+          colors: [
+            Color(0xFFE1BEE7), // Richer Light Purple
+            Color(0xFFD1C4E9), // Deeper Lavender
+            Color(0xFFB3E5FC), // Saturated Light Blue
+          ],
         ),
       ),
       child: Scaffold(
@@ -233,6 +239,7 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
                   }
 
                   await FirebaseFirestore.instance.collection('attendance').add({
+                    'userId': FirebaseAuth.instance.currentUser?.uid,
                     'name':
                         'Technician Name', // textfield controller use panna better
                     'site': _selectedSite,
@@ -240,6 +247,12 @@ class _SafetyChecklistScreenState extends State<SafetyChecklistScreen> {
                     'checklist': _checkedItems,
                     'createdAt': Timestamp.now(),
                   });
+
+                  await NotificationService.addNotification(
+                    message: 'Attendance marked successfully for $_selectedSite on ${_dateController.text}',
+                    type: 'attendance',
+                    buttonText: 'View History',
+                  );
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

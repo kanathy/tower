@@ -47,9 +47,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFF3E5F5),
-            Colors.white,
-            Color(0xFFE1F5FE),
+            Color(0xFFE1BEE7), // Richer Light Purple
+            Color(0xFFD1C4E9), // Deeper Lavender
+            Color(0xFFB3E5FC), // Saturated Light Blue
           ],
         ),
       ),
@@ -245,7 +245,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       // 🔹 Bottom Navigation Bar
       bottomNavigationBar: CurvedNavigationBar(
-        color: Colors.white.withOpacity(0.9),
+        color: const Color(0xffede7f6),
         backgroundColor: Colors.transparent,
         index: 4, // Profile Tab Index
         onTap: (i) {
@@ -389,22 +389,24 @@ class _RateUsDialogState extends State<RateUsDialog> {
               ),
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                return IconButton(
-                  icon: Icon(
-                    index < _rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 40,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _rating = index + 1;
-                    });
-                  },
-                );
-              }),
+            FittedBox(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(
+                      index < _rating ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 32, // Reduced size for better fit
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _rating = index + 1;
+                      });
+                    },
+                  );
+                }),
+              ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
